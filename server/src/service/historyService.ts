@@ -1,17 +1,60 @@
-// TODO: Define a City class with name and id properties
+import dotenv from 'dotenv';
+dotenv.config();
+import fs from 'fs';
+import path from 'path';
 
-// TODO: Complete the HistoryService class
+// Define a City class with name and id properties
+class City {
+  id: number;
+  name: string;
+
+  constructor(name: string) {
+    this.id = Date.now();
+    this.name = name;
+  }
+}
+
+// Complete the HistoryService class
 class HistoryService {
-  // TODO: Define a read method that reads from the searchHistory.json file
-  // private async read() {}
-  // TODO: Define a write method that writes the updated cities array to the searchHistory.json file
-  // private async write(cities: City[]) {}
-  // TODO: Define a getCities method that reads the cities from the searchHistory.json file and returns them as an array of City objects
-  // async getCities() {}
-  // TODO Define an addCity method that adds a city to the searchHistory.json file
-  // async addCity(city: string) {}
-  // * BONUS TODO: Define a removeCity method that removes a city from the searchHistory.json file
-  // async removeCity(id: string) {}
+  private historyFile = path.join(__dirname, '../../db/searchHistory.json');
+
+  // Read from the searchHistory.json file
+  private async read(): Promise<City[]> {
+    if (!fs.existsSync(this.historyFile)) return [];
+    const data = fs.readFileSync(this.historyFile, 'utf-8');
+    return JSON.parse(data);
+  }
+
+  // Write the updated cities array to the searchHistory.json file
+  private async write(cities: City[]): Promise<void> {
+    fs.writeFileSync(this.historyFile, JSON.stringify(cities, null, 2));
+  }
+
+  // Get cities from the search history
+  async getCities(): Promise<City[]> {
+    return await this.read();
+  }
+
+  // Add a city to the search history
+  async addCity(cityName: string): Promise<City> {
+    const cities = await this.read();
+    const newCity = new City(cityName);
+    cities.push(newCity);
+    await this.write(cities);
+    return newCity;
+  }
+
+  // Remove a city from the search history
+  async removeCity(id: number): Promise<boolean> {
+    let cities = await this.read();
+    const initialLength = cities.length;
+    cities = cities.filter(city => city.id !== id);
+    if (cities.length < initialLength) {
+      await this.write(cities);
+      return true;
+    }
+    return false;
+  }
 }
 
 export default new HistoryService();
